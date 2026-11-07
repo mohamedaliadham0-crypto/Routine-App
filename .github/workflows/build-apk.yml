@@ -23,16 +23,18 @@ jobs:
         touch .env
         touch .env.example
 
-    - name: Setup Gradle 8.9
+    - name: Fix AI Studio Plugin Version
+      run: |
+        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i "s/9.1.1/8.5.0/g" {} +
+        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i "s/version \"9\.[^\"]*\"/version \"8.5.0\"/g" {} +
+
+    - name: Setup Gradle 8.7
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: '8.9'
+        gradle-version: '8.7'
 
-    - name: Generate Gradle Wrapper
-      run: gradle wrapper --gradle-version 8.9
-
-    - name: Build Debug APK with Gradle Wrapper
-      run: ./gradlew assembleDebug --stacktrace
+    - name: Build Debug APK with Gradle
+      run: gradle assembleDebug --stacktrace
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
