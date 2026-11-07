@@ -24,6 +24,12 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Create missing env file
+        run: |
+          if [ ! -f .env.example ]; then
+            touch .env.example
+          fi
+
       - name: Build Debug APK
         run: gradle assembleDebug --console=plain
 
