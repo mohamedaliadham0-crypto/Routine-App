@@ -1,49 +1,35 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
-    - name: Create missing environment files
-      run: |
-        touch .env
-        touch .env.example
+      - name: Setup Gradle 8.2
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.2
 
-    - name: Patch AI Studio Gradle Configuration
-      run: |
-        # Replace non-existent 9.1.1 Android plugin version with stable 8.2.2
-        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i 's/9\.1\.1/8.2.2/g' {} +
-        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i 's/8\.5\.0/8.2.2/g' {} +
-        
-        # Ensure settings.gradle.kts has default repositories if missing
-        if [ -f settings.gradle.kts ]; then
-          echo 'pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }' | cat - settings.gradle.kts > temp && mv temp settings.gradle.kts
-        fi
+      - name: Build Debug APK
+        run: gradle assembleDebug --stacktrace
 
-    - name: Setup Gradle 8.2
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.2'
-
-    - name: Build Debug APK
-      run: gradle assembleDebug --no-daemon
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
