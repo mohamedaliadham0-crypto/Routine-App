@@ -24,11 +24,12 @@ jobs:
         with:
           gradle-version: 9.3.1
 
-      - name: Create missing env file
+      - name: Create env file
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
         run: |
-          if [ ! -f .env.example ]; then
-            touch .env.example
-          fi
+          KEY="${API_KEY:-PLACEHOLDER}"
+          printf 'API_KEY="%s"\n' "$KEY" > .env.example
 
       - name: Create debug keystore
         run: |
