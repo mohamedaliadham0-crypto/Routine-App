@@ -23,18 +23,24 @@ jobs:
         touch .env
         touch .env.example
 
-    - name: Fix AI Studio Plugin Version
+    - name: Patch AI Studio Gradle Configuration
       run: |
-        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i "s/9.1.1/8.5.0/g" {} +
-        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i "s/version \"9\.[^\"]*\"/version \"8.5.0\"/g" {} +
+        # Replace non-existent 9.1.1 Android plugin version with stable 8.2.2
+        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i 's/9\.1\.1/8.2.2/g' {} +
+        find . -type f \( -name "*.kts" -o -name "*.gradle" \) -exec sed -i 's/8\.5\.0/8.2.2/g' {} +
+        
+        # Ensure settings.gradle.kts has default repositories if missing
+        if [ -f settings.gradle.kts ]; then
+          echo 'pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }' | cat - settings.gradle.kts > temp && mv temp settings.gradle.kts
+        fi
 
-    - name: Setup Gradle 8.7
+    - name: Setup Gradle 8.2
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: '8.7'
+        gradle-version: '8.2'
 
-    - name: Build Debug APK with Gradle
-      run: gradle assembleDebug --stacktrace
+    - name: Build Debug APK
+      run: gradle assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
